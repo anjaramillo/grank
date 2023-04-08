@@ -2,6 +2,9 @@ from typing import Optional, Union
 
 import numpy as np
 import numpy.typing as npt
+import numpy_indexed as npi
+from joblib import Parallel, delayed
+from scipy.stats import rankdata
 
 
 def grank(
@@ -86,3 +89,89 @@ def grank(
         result = result.astype("float64")
         result[nan_indexes] = np.nan
     return result
+
+
+def npi_rank_n(
+    a: npt.ArrayLike,
+    g: Optional[npt.ArrayLike] = None,
+    method: str = "average",
+    axis: Optional[int] = None,
+    nan_policy: str = "propagate",
+    n_jobs: Optional[int] = None,
+) -> npt.NDArray[np.float64]:
+    """Assign ranks independently within groups. Non-vectorized implementation with
+    numpy-indexed
+
+    """
+    if g is None:
+        g = np.zeros_like(a)
+    a, g = np.asarray(a), np.asarray(g)
+
+    if a.size == 0:
+        dt = np.float64 if method == "average" else np.int_
+        return np.empty(a.shape, dtype=dt)
+
+    gb = npi.group_by(g)
+    with Parallel(n_jobs=n_jobs) as parallel:
+        ranks = parallel(
+            delayed(rankdata)(a=x, method=method, axis=axis, nan_policy=nan_policy)
+            for x in gb.split(a)
+        )
+    rank = np.empty_like(a, dtype=float)
+    rank[gb.index.sorter] = np.concatenate(ranks)
+    return rank
+
+
+def npi_rank_v(
+    a: npt.ArrayLike,
+    g: Optional[npt.ArrayLike] = None,
+    method: str = "average",
+    axis: Optional[int] = None,
+) -> Union[npt.NDArray[np.int_], npt.NDArray[np.float64]]:
+    """Assign ranks independently within groups. Vectorized implementation with
+    numpy-indexed
+
+    """
+    if method not in ("average", "min", "max", "dense", "ordinal"):
+        raise ValueError(f"Unknown method `{method}`")
+
+    a = np.asarray(a)
+    if axis is not None:
+        if a.size == 0:
+            dt = np.float64 if method == "average" else np.int_
+            return np.empty(a.shape, dtype=dt)
+        return np.apply_along_axis(npi_rank_v, axis, a, g, method)
+
+    assert a.ndim == 1, "Only 1-dimensional arrays are supported"
+    if g is None:
+        g = np.zeros_like(a)
+
+    lexidx = npi.as_index((a, g))
+
+    if method == "dense":
+        # Get the unique count of each g. lexidx.unique[1] is the sorted `g`.
+        unique_idx = npi.as_index(lexidx.unique[1])
+        # Get the offset based on the previous g size
+        offset = np.concatenate([[0], np.cumsum(unique_idx.count[:-1])])
+        # Inflate the offset to the same shape as the groups
+        offset = offset[unique_idx.inverse]
+        dense_ranks = unique_idx.rank - offset + 1
+        ranks: npt.NDArray[np.float64] = dense_ranks[lexidx.inverse]
+        return ranks
+
+    gidx = npi.as_index(g)
+    offset = np.concatenate([[0], np.cumsum(gidx.count[:-1])])
+    offset = offset[gidx.inverse]
+    ranks = lexidx.rank - offset + 1
+
+    if method == "ordinal":
+        return ranks
+
+    if method == "average":
+        k, v = npi.group_by(lexidx).mean(ranks)
+    elif method == "max":
+        k, v = npi.group_by(lexidx).max(ranks)
+    elif method == "min":
+        k, v = npi.group_by(lexidx).min(ranks)
+    ranks = v[lexidx.inverse]
+    return ranks
