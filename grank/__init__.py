@@ -2,9 +2,6 @@ from typing import Optional, Union
 
 import numpy as np
 import numpy.typing as npt
-import numpy_indexed as npi
-from joblib import Parallel, delayed
-from scipy.stats import rankdata
 
 
 def grank(
@@ -103,6 +100,10 @@ def npi_rank_n(
     numpy-indexed
 
     """
+    import numpy_indexed as npi
+    from joblib import Parallel, delayed
+    from scipy.stats import rankdata
+
     if g is None:
         g = np.zeros_like(a)
     a, g = np.asarray(a), np.asarray(g)
@@ -134,6 +135,8 @@ def npi_rank_v(
     """
     if method not in ("average", "min", "max", "dense", "ordinal"):
         raise ValueError(f"Unknown method `{method}`")
+
+    import numpy_indexed as npi
 
     a = np.asarray(a)
     if axis is not None:
