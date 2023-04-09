@@ -35,28 +35,31 @@ def grank(
 
     # These helper indexes are inspired by numpy-indexed.
     sorter = np.lexsort((a, g))
-    sorted_a = a[sorter]
     sorted_g = g[sorter]
     flag = sorted_g[:-1] != sorted_g[1:]
     slices = np.r_[0, np.flatnonzero(flag) + 1, len(a)]
     start = slices[:-1]
 
+    g_index = np.arange(len(start), dtype=np.intp)
+    a_index = np.arange(sorter.size, dtype=np.intp)
+
     # Convert sorted group id into the original rank
     g2inv = np.empty(sorter.size, int)
-    g2inv[sorter] = np.repeat(np.arange(len(start)), np.diff(slices))
+    g2inv[sorter] = np.repeat(g_index, np.diff(slices))
 
     offset = start
 
     if method == "ordinal":
         rank = np.empty(len(a), int)
-        rank[sorter] = np.arange(len(a))
+        rank[sorter] = a_index
         rank -= offset[g2inv]
         result = rank + 1
     else:
         # Convert sorted data into the original rank
         x2inv = np.empty(sorter.size, int)
-        x2inv[sorter] = np.arange(sorter.size, dtype=np.intp)
+        x2inv[sorter] = a_index
 
+        sorted_a = a[sorter]
         obs = np.r_[True, sorted_a[1:] != sorted_a[:-1]]
         obs[start] = True
         dense = obs.cumsum()
