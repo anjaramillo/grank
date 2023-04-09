@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Any, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -9,7 +9,7 @@ def grank(
     g: Optional[npt.ArrayLike] = None,
     method: str = "average",
     axis: Optional[int] = None,
-) -> Union[npt.NDArray[np.int_], npt.NDArray[np.float64]]:
+) -> npt.NDArray[Any]:
     """Assign ranks independently within groups.
 
     When `g` is not None, the rankings are assigned independently within groups. When
@@ -128,7 +128,7 @@ def npi_rank_v(
     g: Optional[npt.ArrayLike] = None,
     method: str = "average",
     axis: Optional[int] = None,
-) -> Union[npt.NDArray[np.int_], npt.NDArray[np.float64]]:
+) -> npt.NDArray[Any]:
     """Assign ranks independently within groups. Vectorized implementation with
     numpy-indexed
 
