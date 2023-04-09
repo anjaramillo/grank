@@ -39,9 +39,9 @@ def run_once(groups: int, group_size: int, method: str) -> pd.DataFrame:
     time_pandas = t2 - t1
     print(f"pandas: {t2-t1}")
 
-    assert_array_equal(result_a, result_b)  # type: ignore
-    assert_array_equal(result_a, result_c)  # type: ignore
-    assert_array_equal(result_a, result_d)  # type: ignore
+    assert_array_equal(result_a, result_b)
+    assert_array_equal(result_a, result_c)
+    assert_array_equal(result_a, result_d)
 
     return {
         "grank": time_grank,
