@@ -43,7 +43,7 @@ def grank(
 
     # Convert sorted group id into the original rank
     g2inv = np.empty(sorter.size, int)
-    g2inv[sorter] = np.cumsum(np.r_[False, flag])
+    g2inv[sorter] = np.repeat(np.arange(len(start)), np.diff(slices))
 
     offset = start
 
