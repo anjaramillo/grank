@@ -19,7 +19,7 @@ def grank(
     a = np.asarray(a)
     if axis is not None:
         if a.size == 0:
-            dt = np.float64 if method == "average" else np.int_
+            dt = np.float_ if method == "average" else np.int_
             return np.empty(a.shape, dtype=dt)
         return np.apply_along_axis(grank, axis, a, g, method)
 
@@ -86,7 +86,7 @@ def grank(
                 result = avg_rank
 
     if nan_indexes is not None:
-        result = result.astype("float64")
+        result = result.astype(np.float_)
         result[nan_indexes] = np.nan
     return result
 
@@ -98,7 +98,7 @@ def npi_rank_n(
     axis: Optional[int] = None,
     nan_policy: str = "propagate",
     n_jobs: Optional[int] = None,
-) -> npt.NDArray[np.float64]:
+) -> npt.NDArray[np.float_]:
     """Assign ranks independently within groups. Non-vectorized implementation with
     numpy-indexed
 
@@ -112,7 +112,7 @@ def npi_rank_n(
     a, g = np.asarray(a), np.asarray(g)
 
     if a.size == 0:
-        dt = np.float64 if method == "average" else np.int_
+        dt = np.float_ if method == "average" else np.int_
         return np.empty(a.shape, dtype=dt)
 
     gb = npi.group_by(g)
@@ -144,7 +144,7 @@ def npi_rank_v(
     a = np.asarray(a)
     if axis is not None:
         if a.size == 0:
-            dt = np.float64 if method == "average" else np.int_
+            dt = np.float_ if method == "average" else np.int_
             return np.empty(a.shape, dtype=dt)
         return np.apply_along_axis(npi_rank_v, axis, a, g, method)
 
@@ -162,7 +162,7 @@ def npi_rank_v(
         # Inflate the offset to the same shape as the groups
         offset = offset[unique_idx.inverse]
         dense_ranks = unique_idx.rank - offset + 1
-        ranks: npt.NDArray[np.float64] = dense_ranks[lexidx.inverse]
+        ranks: npt.NDArray[np.float_] = dense_ranks[lexidx.inverse]
         return ranks
 
     gidx = npi.as_index(g)
