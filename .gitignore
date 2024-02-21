@@ -125,3 +125,6 @@ dmypy.json
 .pyre/
 
 .unison
+
+# DS mac files
+**/.DS_Store
